@@ -7,12 +7,21 @@ import (
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
 	"log"
+	"os"
+	"strconv"
 	"time"
 )
 
 func main() {
-	host := "localhost"
-	port := 5555
+	host := os.Getenv("CUBE_HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	portStr := os.Getenv("CUBE_PORT")
+	if portStr == "" {
+		portStr = "5555"
+	}
+	port, _ := strconv.Atoi(portStr)
 
 	fmt.Printf("Starting Cube Worker\n")
 

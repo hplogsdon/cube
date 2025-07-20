@@ -28,6 +28,29 @@ func (s *Stats) MemAvailableKb() uint64 {
 	return s.MemStats.MemAvailable
 }
 
+func (s *Stats) DiskTotal() uint64 {
+	return s.DiskStats.All
+}
+
+func (s *Stats) DiskFree() uint64 {
+	return s.DiskStats.Free
+}
+
+func (s *Stats) DiskUsed() uint64 {
+	return s.DiskStats.Used
+}
+
+func (s *Stats) CPUUsage() float64 {
+	idle := s.CPUStats.Idle + s.CPUStats.IOWait
+	nonIdle := s.CPUStats.User + s.CPUStats.Nice + s.CPUStats.System + s.CPUStats.IRQ + s.CPUStats.SoftIRQ + s.CPUStats.Steal
+	total := idle + nonIdle
+
+	if total == 0 && idle == 0 {
+		return 0.00
+	}
+	return float64(total) - float64(idle)/float64(total)
+}
+
 func GetStats() *Stats {
 	return &Stats{
 		MemStats:  GetMemoryInfo(),
