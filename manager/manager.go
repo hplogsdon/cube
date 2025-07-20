@@ -35,10 +35,6 @@ func (m *Manager) SelectWorker() string {
 	return m.Workers[newWorker]
 }
 
-func (m *Manager) UpdateTasks() {
-	fmt.Println("UpdateTasks")
-}
-
 func (m *Manager) SendWork() {
 	if m.Pending.Len() > 0 {
 		w := m.SelectWorker()
@@ -90,5 +86,68 @@ func (m *Manager) SendWork() {
 		log.Printf("%#v\n", t)
 	} else {
 		log.Printf("No work in queue\n")
+	}
+}
+
+func (m *Manager) UpdateTasks() {
+	for _, worker := range m.Workers {
+		log.Printf("Updating worker %s\n", worker)
+		url := fmt.Sprintf("http://%s/tasks", worker)
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Printf("error connecting to worker %s: %v\n", worker, err)
+			return
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("error sending request (%d) %v\n", resp.StatusCode, err)
+			return
+		}
+
+		d := json.NewDecoder(resp.Body)
+		var tasks []*task.Task
+		if err := d.Decode(&tasks); err != nil {
+			log.Printf("error deserializing response from worker %s: %s\n", worker, err.Error())
+			return
+		}
+		for _, task := range tasks {
+			log.Printf("Updating task %v\n", task)
+			_, ok := m.TaskDb[task.ID]
+			if !ok {
+				log.Printf("Task with id %v not found\n", task.ID)
+				return
+			}
+
+			if m.TaskDb[task.ID].State != task.State {
+				m.TaskDb[task.ID].State = task.State
+			}
+
+			m.TaskDb[task.ID].StartTime = task.StartTime
+			m.TaskDb[task.ID].EndTime = task.EndTime
+			m.TaskDb[task.ID].ContainerID = task.ContainerID
+		}
+	}
+}
+
+func (m *Manager) AddTask(te task.TaskEvent) {
+	m.Pending.Enqueue(te)
+}
+
+func NewManager(workers []string) *Manager {
+	taskDb := make(map[uuid.UUID]*task.Task)
+	eventDb := make(map[uuid.UUID]*task.TaskEvent)
+	workerTaskMap := make(map[string][]uuid.UUID)
+	taskWorkerMap := make(map[uuid.UUID]string)
+	for w := range workers {
+		workerTaskMap[workers[w]] = []uuid.UUID{}
+	}
+
+	return &Manager{
+		Pending:       *queue.New(),
+		Workers:       workers,
+		TaskDb:        taskDb,
+		EventDb:       eventDb,
+		WorkerTaskMap: workerTaskMap,
+		TaskWorkerMap: taskWorkerMap,
 	}
 }
