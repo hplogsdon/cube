@@ -6,37 +6,37 @@ import (
 	"fmt"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
+	"log"
 	"time"
 )
 
 func main() {
-	db := make(map[uuid.UUID]*task.Task)
+	host := "localhost"
+	port := 5555
+
+	fmt.Printf("Starting Cube Worker\n")
+
 	w := worker.Worker{
 		Queue: *queue.New(),
-		Db:    db,
+		Db:    make(map[uuid.UUID]*task.Task),
 	}
+	api := worker.Api{Address: host, Port: port, Worker: &w}
+	go runtasks(&w)
+	api.Start()
+}
 
-	t := task.Task{
-		ID:    uuid.New(),
-		Name:  "Task-1",
-		State: task.Scheduled,
-		Image: "strm/helloworld-http",
-	}
+func runtasks(w *worker.Worker) {
+	for {
+		if w.Queue.Len() != 0 {
+			result := w.RunTask()
+			if result.Error != nil {
+				panic(result.Error)
+			}
+		} else {
+			log.Printf("No more tasks\n")
+		}
+		log.Printf("Sleeping\n")
 
-	w.AddTask(t)
-	result := w.RunTask()
-	if result.Error != nil {
-		panic(result.Error)
-	}
-
-	t.ContainerID = result.ContainerId
-	fmt.Printf("task %s is running in container: %s\n", t.ID, t.ContainerID)
-	fmt.Printf("Sleeping\n")
-	time.Sleep(time.Second * 30)
-
-	fmt.Printf("stopping task %s\n", t.ID)
-	result = w.StopTask(t)
-	if result.Error != nil {
-		panic(result.Error)
+		time.Sleep(time.Second * 10)
 	}
 }
