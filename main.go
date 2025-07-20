@@ -35,12 +35,8 @@ func main() {
 	time.Sleep(time.Second * 30)
 
 	fmt.Printf("stopping task %s\n", t.ID)
-	t.State = task.Completed
-	w.AddTask(t)
-	result = w.RunTask()
+	result = w.StopTask(t)
 	if result.Error != nil {
 		panic(result.Error)
 	}
-
-	// w.StopTask(t)
 }
