@@ -26,8 +26,8 @@ of containerized tasks across multiple worker nodes.
 ### Steps
 1. **Clone**
    ```
-   git clone https://github.com/.../....git
-   cd ...
+   git clone https://github.com/hplogsdon/cube.git
+   cd cube
    ```
    
 2. **Setup Management**
@@ -42,7 +42,7 @@ of containerized tasks across multiple worker nodes.
    
 4. **Validate**
    ```
-   curl -XGET http://.../workers
+   curl -XGET http://localhost:5555/workers
    ```
 
 ## Usage
