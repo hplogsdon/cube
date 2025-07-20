@@ -1,4 +1,4 @@
-DELETE http://localhost:5555/tasks/266592cd-960d-4091-981c-8c25c44b1018
+GET http://localhost:5555/stats
 Accept: application/json
 
 ###
@@ -16,6 +16,9 @@ Content-Type: application/json
 }
 
 ###
-### GET request to example server
 GET http://localhost:5555/tasks
+
+
 ###
+DELETE http://localhost:5555/tasks/266592cd-960d-4091-981c-8c25c44b1018
+Accept: application/json

@@ -14,15 +14,20 @@ type Worker struct {
 	Name      string
 	Queue     queue.Queue
 	Db        map[uuid.UUID]*task.Task
+	Stats     *Stats
 	TaskCount int
 }
 
 func (w *Worker) CollectStats() {
-	fmt.Println("CollectStats")
+	for {
+		log.Println("Collecting Stats")
+		w.Stats = GetStats()
+		time.Sleep(15 * time.Second)
+	}
 }
 
 func (w *Worker) GetTasks() []*task.Task {
-	tasks := []*task.Task{}
+	var tasks []*task.Task
 	for _, t := range w.Db {
 		tasks = append(tasks, t)
 	}

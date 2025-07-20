@@ -57,10 +57,17 @@ func (a *Api) StopTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Printf("Task %v does not exist\n", tId)
 		w.WriteHeader(http.StatusNotFound)
+	} else {
+		taskToStop := a.Worker.Db[tId]
+		taskCopy := *taskToStop
+		taskCopy.State = task.Completed
+		a.Worker.StopTask(taskCopy)
+		w.WriteHeader(http.StatusNoContent)
 	}
-	taskToStop := a.Worker.Db[tId]
-	taskCopy := *taskToStop
-	taskCopy.State = task.Completed
-	a.Worker.StopTask(taskCopy)
-	w.WriteHeader(http.StatusNoContent)
+}
+
+func (a *Api) GetStatsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(a.Worker.Stats)
 }

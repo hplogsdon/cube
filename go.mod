@@ -3,6 +3,7 @@ module cube
 go 1.20
 
 require (
+	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
 	github.com/docker/go-connections v0.4.0
 	github.com/go-chi/chi v1.5.5
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3

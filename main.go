@@ -22,6 +22,7 @@ func main() {
 	}
 	api := worker.Api{Address: host, Port: port, Worker: &w}
 	go runtasks(&w)
+	go w.CollectStats()
 	api.Start()
 }
 
@@ -33,10 +34,8 @@ func runtasks(w *worker.Worker) {
 				panic(result.Error)
 			}
 		} else {
-			log.Printf("No more tasks\n")
+			log.Printf("No tasks\n")
 		}
-		log.Printf("Sleeping\n")
-
 		time.Sleep(time.Second * 10)
 	}
 }
