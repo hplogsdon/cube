@@ -7,78 +7,48 @@ import (
 	"fmt"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
-	"log"
 	"os"
 	"strconv"
-	"time"
 )
 
 func main() {
-	host := os.Getenv("CUBE_HOST")
-	if host == "" {
-		host = "localhost"
+	whost := os.Getenv("CUBE_WORKER_HOST")
+	wport, _ := strconv.Atoi(os.Getenv("CUBE_WORKER_PORT"))
+	if whost == "" || wport == 0 {
+		whost = "localhost"
+		wport = 5678
 	}
-	portStr := os.Getenv("CUBE_PORT")
-	if portStr == "" {
-		portStr = "5555"
+
+	mhost := os.Getenv("CUBE_MANAGER_HOST")
+	mport, _ := strconv.Atoi(os.Getenv("CUBE_MANAGER_PORT"))
+	if mhost == "" || mport == 0 {
+		mhost = "localhost"
+		mport = 5555
 	}
-	port, _ := strconv.Atoi(portStr)
 
 	fmt.Printf("Starting Cube Worker\n")
 
 	w := worker.Worker{
+		Name:  "worker-1",
 		Queue: *queue.New(),
 		Db:    make(map[uuid.UUID]*task.Task),
 	}
-	api := worker.Api{Address: host, Port: port, Worker: &w}
-	go runtasks(&w)
+	api := worker.Api{Address: whost, Port: wport, Worker: &w}
+
+	go w.RunTasks()
 	go w.CollectStats()
 	go api.Start()
 
-	workers := []string{fmt.Sprintf("%s:%d", host, port)}
+	workers := []string{fmt.Sprintf("%s:%d", whost, wport)}
 	m := manager.NewManager(workers)
-	for i := 0; i < 3; i++ {
-		t := task.Task{
-			ID:    uuid.New(),
-			Name:  fmt.Sprintf("test-container-%d", i+1),
-			State: task.Scheduled,
-			Image: "strm/helloworld-http",
-		}
-		te := task.TaskEvent{
-			ID:    uuid.New(),
-			Task:  t,
-			State: task.Running,
-		}
-		m.AddTask(te)
-		m.SendWork()
+	mApi := manager.Api{
+		Address: mhost,
+		Port:    mport,
+		Manager: m,
 	}
+	fmt.Printf("Starting Manager at %s:%d\n", mhost, mport)
 
-	go func() {
-		for {
-			fmt.Printf("Updating tasks from %d workers\n", len(m.Workers))
-			m.UpdateTasks()
-			time.Sleep(11 * time.Second)
-		}
-	}()
-
-	for {
-		for _, t := range m.TaskDb {
-			fmt.Printf("[Manager] Task: id: %s, state: %d\n", t.ID, t.State)
-			time.Sleep(12 * time.Second)
-		}
-	}
-}
-
-func runtasks(w *worker.Worker) {
-	for {
-		if w.Queue.Len() != 0 {
-			result := w.RunTask()
-			if result.Error != nil {
-				panic(result.Error)
-			}
-		} else {
-			log.Printf("No tasks\n")
-		}
-		time.Sleep(time.Second * 10)
-	}
+	go m.ProcessTasks()
+	go m.UpdateTasks()
+	mApi.Start()
 }

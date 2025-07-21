@@ -34,6 +34,20 @@ func (w *Worker) GetTasks() []*task.Task {
 	return tasks
 }
 
+func (w *Worker) RunTasks() {
+	for {
+		if w.Queue.Len() != 0 {
+			result := w.RunTask()
+			if result.Error != nil {
+				panic(result.Error)
+			}
+		} else {
+			log.Printf("No tasks\n")
+		}
+		time.Sleep(time.Second * 10)
+	}
+}
+
 func (w *Worker) RunTask() task.DockerResult {
 	t := w.Queue.Dequeue()
 	if t == nil {
