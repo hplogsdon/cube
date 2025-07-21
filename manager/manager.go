@@ -90,12 +90,12 @@ func (m *Manager) SendWork() {
 }
 
 func (m *Manager) UpdateTasks() {
-	for _, worker := range m.Workers {
-		log.Printf("Updating worker %s\n", worker)
-		url := fmt.Sprintf("http://%s/tasks", worker)
+	for _, w := range m.Workers {
+		log.Printf("Updating w %s\n", w)
+		url := fmt.Sprintf("http://%s/tasks", w)
 		resp, err := http.Get(url)
 		if err != nil {
-			log.Printf("error connecting to worker %s: %v\n", worker, err)
+			log.Printf("error connecting to w %s: %v\n", w, err)
 			return
 		}
 
@@ -107,7 +107,7 @@ func (m *Manager) UpdateTasks() {
 		d := json.NewDecoder(resp.Body)
 		var tasks []*task.Task
 		if err := d.Decode(&tasks); err != nil {
-			log.Printf("error deserializing response from worker %s: %s\n", worker, err.Error())
+			log.Printf("error deserializing response from w %s: %s\n", w, err.Error())
 			return
 		}
 		for _, task := range tasks {
