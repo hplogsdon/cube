@@ -65,6 +65,9 @@ changelog:
       - "^docs:"
       - "^test:"
 
+checksum:
+  name_template: {{ .ProjectName }}_{{ .Tag }}_checksums.txt
+
 release:
   github: {}
   footer: >-
