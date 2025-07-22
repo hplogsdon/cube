@@ -25,5 +25,5 @@ func main() {
 
 	go w.RunTasks()
 	go w.CollectStats()
-	go api.Start()
+	api.Start()
 }
