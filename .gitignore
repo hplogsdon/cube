@@ -22,3 +22,5 @@ go.work
 
 # IDE
 .idea/
+# Added by goreleaser init:
+dist/
